@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Product, Collection
 from .serializers import ProductSerializer, CollectionSerializer
+from django.db.models.aggregates import Count
 from django.shortcuts import get_object_or_404
 # django way : 
 # def product_list(request):
@@ -55,13 +56,37 @@ def product_detail(request, pk):
 
 
 
+@api_view(['GET', 'POST'])
+def collection_list(request):
+    if request.method == 'GET':
+        queryset = Collection.objects.annotate(products_count = Count('products')).all()
+        serializer = CollectionSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = CollectionSerializer(data=serializer.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 
-@api_view()
+@api_view(['GET','PUT', 'DELETE'])
 def collection_detail(request,pk):
     collection = get_object_or_404(Collection, pk=pk)
-    serializer = CollectionSerializer(collection)
-    return Response(serializer.data)
+
+    if request.method == 'GET':
+        serializer = CollectionSerializer(collection)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT': 
+        serializer = CollectionSerializer(collection, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    elif request.method == 'DELETE':
+        collection.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
