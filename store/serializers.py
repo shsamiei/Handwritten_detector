@@ -7,12 +7,12 @@ from .models import Product, Collection
 #     id = serializers.IntegerField()
 #     title = serializers.CharField(max_length=255)
 
-class CollectionSerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = Collection
+# class CollectionSerializer(serializers.ModelSerializer):
+    # class Meta: 
+        # model = Collection
         # avoid this , you may not expose every fields to client so avoid using __all__ it is for lazy developers
         # fields = '__all__'
-        fields = ['id', 'title']
+        # fields = ['id', 'title']
 
 # class ProductSerializer(serializers.Serializer):
 #     id = serializers.IntegerField()
@@ -41,24 +41,54 @@ class CollectionSerializer(serializers.ModelSerializer):
 #     def calculate_tax(self, product: Product):
 #         return product.unit_price * Decimal(1.1)
 
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = Product
-        fields = ['id', 'title', 'unit_price', 'collection']
+# class ProductSerializer(serializers.ModelSerializer):
+#     class Meta: 
+#         model = Product
+#         fields = ['id', 'title', 'slug', 'description', 'inventory', 'unit_price', 'collection']
 
-    # price_with_tax = serializers.SerializerMethodField('calculate_tax')
+#     # price_with_tax = serializers.SerializerMethodField('calculate_tax')
 
-    collection = serializers.HyperlinkedRelatedField(
-        queryset = Collection.objects.all(),
-        view_name='collection-detail'
-    )
-    def calculate_tax(self, product: Product):
-        return product.unit_price * Decimal(1.1)
+#     collection = serializers.HyperlinkedRelatedField(
+#         queryset = Collection.objects.all(),
+#         view_name='collection-detail'
+#     )
+#     def calculate_tax(self, product: Product):
+#         return product.unit_price * Decimal(1.1)
 
 
     # it is a way to validate the data that we recieved from client : 
-    
+
     # def validate(self, data):
     #     if data['password'] != data['confirm_password']:
     #         return serializers.ValidationError('passwords dont match')
     #     return data 
+
+    # you can overwrite create method to add for example sth to the object 
+
+    # def create(self, validated_data):
+    #     product = Product(**validated_data)
+    #     product.other = 1 
+    #     product.save()
+    #     return product
+
+    # def update(self, instance, validated_data):
+    #     instance.unit_price = validated_data.get('unit_price')
+    #     instance.save()
+    #     return instance
+
+
+
+    
+class CollectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Collection
+        fields = ['id', 'title']
+
+    
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = fields = ['id', 'title', 'slug', 'description', 'inventory', 'unit_price', 'collection']
+
+    
