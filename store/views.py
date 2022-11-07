@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet
-from .models import Product, Collection
+from .models import Product, Collection, OrderItem
 from .serializers import ProductSerializer, CollectionSerializer
 from django.db.models.aggregates import Count
 from django.shortcuts import get_object_or_404
@@ -22,17 +22,22 @@ class ProductViewSet(ModelViewSet):
     def get_serializer_context(self):
         return {'request':self.request}
 
-    def delete(self, request, pk):
-        product = get_object_or_404(Product, pk=pk)
-        if product.orderitems.count() > 0 :
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0 :
                 return Response({'error':'product cant be deleted '})
-        product.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return super().destroy(request, *args, **kwargs)
+
 
 
 class CollectionViewSet(ModelViewSet):
     queryset = Collection.objects.annotate(products_count = Count('products')).all()
     serializer_class = CollectionSerializer
+
+
+# Modelviewset contain all the operators such as get post put delete etc. 
+# if we dont want all of them and just get , delete we can inherit from ReadOnlyModelViewSet
+
+
 
 
 
