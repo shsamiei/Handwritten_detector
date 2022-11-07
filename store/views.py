@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response 
 from rest_framework import status
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.views import APIView
 from .models import Product, Collection
 from .serializers import ProductSerializer, CollectionSerializer
@@ -17,67 +18,52 @@ from django.shortcuts import get_object_or_404
 
 
 
-class ProductList(APIView):
-    def get(self, request):
-        query_set = Product.objects.select_related('collection').all()
-        serializer = ProductSerializer(query_set, many=True, context={'request':request})
-        return Response(serializer.data)
+class ProductList(ListCreateAPIView):
 
-    def post(self, request):
-        serializer = ProductSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-           
+    # if you some logics for creating  queryset or serializer you should use this methods 
 
-class ProductDetail(APIView):
+    # def get_queryset(self):
+    #     return Product.objects.select_related('collection').all()
 
-    def get(self, request,pk):
-        product = get_object_or_404(Product, pk=pk)
-        serializer = ProductSerializer(product)
-        return Response(serializer.data)
+    # def get_serializer_class(self):
+    #     return ProductSerializer
+
+    # otherwise you can use queryset and serializerclass just like we have below :
+
+    queryset = Product.objects.select_related('collection').all()
+    serializer_class = ProductSerializer
+
+    def get_serializer_context(self):
+        return {'request':self.request}
+
+        
+class ProductDetail(RetrieveUpdateDestroyAPIView):
+
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
 
     def delete(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
+        if product.orderitems.count() > 0 :
+                return Response({'error':'product cant be deleted '})
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CollectionList(APIView):
+class CollectionList(ListCreateAPIView):
 
-    def get(self, request):
-        queryset = Collection.objects.annotate(products_count = Count('products')).all()
-        serializer = CollectionSerializer(queryset, many=True)
-        return Response(serializer.data)
+    queryset = Collection.objects.annotate(products_count = Count('products')).all()
+    serializer_class = CollectionSerializer
+    
+ 
+class CollectionDetail(RetrieveUpdateDestroyAPIView):
+    queryset = Collection.objects.all()
+    serializer_class = CollectionSerializer
 
+    # in the product_detail we had some logics for deleting an objects so we override the delete function
+    # but here we don't have special logic for delete , put , get so we just set queryset and serializer_class 
 
-    def post(self, request):
-        serializer = CollectionSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class CollectionDetail(APIView):
-
-    def get(self, request, pk):
-        collection = get_object_or_404(Collection, pk=pk)
-        serializer = CollectionSerializer(collection)
-        return Response(serializer.data)
-
-
-    def put(self, request, pk):
-        collection = get_object_or_404(Collection, pk=pk)
-        serializer = CollectionSerializer(collection, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-
-    def delete(self, request, pk):
-        collection = get_object_or_404(Collection, pk=pk)
-        collection.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    
 
 
 

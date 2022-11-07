@@ -91,7 +91,11 @@ class CollectionSerializer(serializers.ModelSerializer):
         model = Collection
         fields = ['id', 'title', 'products_count']
     
-    products_count = serializers.IntegerField()
+    # it is read only because it is just for serilizing and sent data to client and you can not post data and craete object with your product_count value 
+    # omidvaram fahmide bashi :))) vali baz migam in baraye server be client gozashte shode , vaghti client dare post mikone in ro toye pocket nemizare pas 
+    # read onlysh mikonim ke moshkeli ijad nashe :)) 
+    
+    products_count = serializers.IntegerField(read_only = True)
 
     
     
