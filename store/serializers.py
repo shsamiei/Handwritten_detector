@@ -111,7 +111,7 @@ class CollectionSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = fields = ['id', 'title', 'slug', 'description', 'inventory', 'unit_price', 'collection']
+        fields = ['id', 'title', 'slug', 'description', 'inventory', 'unit_price', 'collection']
 
     
 
@@ -124,21 +124,50 @@ class ReviewSerializer(serializers.ModelSerializer):
         product_id = self.context['product_id']
         return Review.objects.create(product_id=product_id, **validated_data)
  
+class SimpleProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['title', 'unit_price']
+
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    # to show the product with detail : 
+    product = SimpleProductSerializer()
+    total_price = serializers.SerializerMethodField('get_total_price')
+
+    def get_total_price(self, cart_item: CartItem):
+        return cart_item.quantity * cart_item.product.unit_price
+
+
+    class Meta: 
+        model = CartItem
+        fields = ['id', 'product', 'quantity', 'total_price']
+
+    # def create(self, validated_data):
+    #     cart_id = self.context['cart_id']
+    #     return Cart.objects.create(cart_id=cart_id, **validated_data)
 
 
 class CartSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True) 
+    # to show items with details :
+    items = CartItemSerializer(many=True)
+    # total_price = serializers.SerializerMethodField('')
+
+    # def get_total_price(self, cart:Cart):
+
+    #     pass
+
+
     class Meta: 
         model = Cart
-        fields = ['id', 'created_at']
+        fields = ['id', 'total_price', 'items']
 
-class CartItemSerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = CartItem
-        fields = ['product', 'quantity']
+    total_price = serializers.IntegerField(read_only = True)
 
-    def create(self, validated_data):
-        cart_id = self.context['cart_id']
-        return Cart.objects.create(cart_id=cart_id, **validated_data)
+
+
 
 
 

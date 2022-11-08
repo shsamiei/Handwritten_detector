@@ -1,4 +1,5 @@
-from django.db.models.aggregates import Count
+from django.db.models.aggregates import Count, Sum 
+from django.db.models import Q, F
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response 
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -55,15 +56,18 @@ class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
 
     def get_queryset(self):
-         return Review.objects.filter( product_id = self.kwargs['product_pk'])
+         return Review.objects.filter(product_id = self.kwargs['product_pk'])
 
     def get_serializer_context(self):
          return {'product_id': self.kwargs['product_pk']}
 
 
 class CartViewSet(ModelViewSet):
-    queryset = Cart.objects.all()
+    queryset = Cart.objects.annotate(
+            total_price = Sum(F('items__quantity'))
+         ).all()
     serializer_class = CartSerializer
+
 
 
 
@@ -71,13 +75,21 @@ class CartItemViewSet(ModelViewSet):
     serializer_class = CartItemSerializer
 
     def get_queryset(self):
-         return CartItem.objects.filter( cart_id = self.kwargs['cart_pk'])
+         return CartItem.objects.filter(cart_id = self.kwargs['cart_pk']).all()
 
-    def get_serializer_context(self):
-         return {'cart_id': self.kwargs['cart_pk']}
-         
+    # def get_serializer_context(self):
+    #      return {'cart_id': self.kwargs['cart_pk']}
 
 
+#------------------begin-----------------------------
+    # Customers and the total amount they’ve spent
+
+    # query_set = Customer.objects.annotate(
+    #      total_spent = Sum(F('order__orderitem__unit_price') * F('order__orderitem__quantity')),
+    #      quantity = F('order__orderitem__quantity')
+    # )
+#-------------------end------------------------------
+     
 
 
 
