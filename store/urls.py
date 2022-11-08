@@ -1,26 +1,20 @@
 from django.urls import path
 from django.urls.conf import include
 from rest_framework_nested import routers
-from rest_framework.routers import SimpleRouter
 from . import views
 from pprint import pprint
 
-router = SimpleRouter()
-router.register('products', views.ProductViewSet)
+
+# it is nested router way : 
+
+router = routers.DefaultRouter()
+router.register('products', views.ProductViewSet, basename='products')
 router.register('collections', views.CollectionViewSet)
-router.register('reviews', views.ReviewViewSet)
 
-# pprint(router.urls)
+products_router = routers.NestedDefaultRouter(router, 'products', lookup='product')
+products_router.register('reviews', views.ReviewViewSet, basename='product-reviews')
 
+urlpatterns = router.urls + products_router.urls
 
-# first way :
-urlpatterns = router.urls
-
-# if you want to have some other paths
-
-# urlpatterns = [
-#     path('', include(router.urls)),
-#     # path()....
-# ]
 
   
