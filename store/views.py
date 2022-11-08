@@ -63,9 +63,7 @@ class ReviewViewSet(ModelViewSet):
 
 
 class CartViewSet(ModelViewSet):
-    queryset = Cart.objects.annotate(
-            total_price = Sum(F('items__quantity'))
-         ).all()
+    queryset = Cart.objects.prefetch_related('items__product').all()
     serializer_class = CartSerializer
 
 

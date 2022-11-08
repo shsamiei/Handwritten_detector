@@ -1,7 +1,7 @@
 from decimal import Decimal
 from rest_framework import serializers
 from .models import Product, Collection, Review, Cart, CartItem
-from django.db.models.aggregates import Count 
+from django.db.models.aggregates import Count, Sum
 
 # class CollectionSerializer(serializers.Serializer):
 #     id = serializers.IntegerField()
@@ -153,16 +153,14 @@ class CartSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True) 
     # to show items with details :
     items = CartItemSerializer(many=True)
-    # total_price = serializers.SerializerMethodField('')
+    total_price = serializers.SerializerMethodField('get_total_price')
 
-    # def get_total_price(self, cart:Cart):
-
-    #     pass
-
-
+    def get_total_price(self, cart: Cart):
+        return Sum([item.quantity * item.product.unit_price for item in cart.items.all()])
+ 
     class Meta: 
         model = Cart
-        fields = ['id', 'total_price', 'items']
+        fields = ['id',  'items', 'total_price']
 
     total_price = serializers.IntegerField(read_only = True)
 
