@@ -8,7 +8,9 @@ from pprint import pprint
 router = SimpleRouter()
 router.register('products', views.ProductViewSet)
 router.register('collections', views.CollectionViewSet)
-pprint(router.urls)
+router.register('reviews', views.ReviewViewSet)
+
+# pprint(router.urls)
 
 
 # first way :
