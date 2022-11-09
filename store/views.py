@@ -6,7 +6,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import PageNumberPagination
 from .models import Product, Collection, OrderItem, Review, Cart, CartItem
-from .serializers import ProductSerializer, CollectionSerializer, ReviewSerializer, CartSerializer, CartItemSerializer
+from .serializers import ProductSerializer, CollectionSerializer, ReviewSerializer, CartSerializer, CartItemSerializer, AddCartItemSerializer
 from .filters import ProductFilter
 
 # -----------------------------------------------------------------------------------------------------------
@@ -67,27 +67,24 @@ class CartViewSet(ModelViewSet):
     serializer_class = CartSerializer
 
 
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+
 
 
 class CartItemViewSet(ModelViewSet):
-    serializer_class = CartItemSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return AddCartItemSerializer
+        return CartItemSerializer
 
     def get_queryset(self):
-         return CartItem.objects.filter(cart_id = self.kwargs['cart_pk']).all()
+         return CartItem.objects.filter(cart_id = self.kwargs['cart_pk']).select_related('product').all()
 
-    # def get_serializer_context(self):
-    #      return {'cart_id': self.kwargs['cart_pk']}
-
-
-#------------------begin-----------------------------
-    # Customers and the total amount they’ve spent
-
-    # query_set = Customer.objects.annotate(
-    #      total_spent = Sum(F('order__orderitem__unit_price') * F('order__orderitem__quantity')),
-    #      quantity = F('order__orderitem__quantity')
-    # )
-#-------------------end------------------------------
-     
+    def get_serializer_context(self):
+         return {'cart_id': self.kwargs['cart_pk']}
 
 
 
